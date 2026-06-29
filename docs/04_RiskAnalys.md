@@ -1,0 +1,13 @@
+# Riskanalys och Mitigering
+
+I denna fas utvärderar vi de hot som identifierades i STRIDE-analysen. Varje hot bedöms utifrån Sannolikhet (S) och Konsekvens (K) på en skala 1–5, vilket genererar ett Riskvärde (S x K). Därefter definierar vi de strategiska och tekniska säkerhetskontroller som krävs för att reducera risken till en acceptabel nivå.
+
+
+| Risk-ID | Hot / Scenario | S | K | Riskvärde | Säkerhetskontroll / Mitigering (Målarkitektur) |
+|---------|----------------|---|---|-----------|--------------------------------------------------|
+| R-01 | (Spoofing) En angripare förfalskar identitet/tokens för att få obehörig API-åtkomst. | 3 | 5 | 15 (Hög) | Strikt Autentisering & Zero-Trust: Krav på mTLS för M2M-integrationer. Handläggare måste använda OIDC/SAML med stark MFA via myndighetens IdP. Inga anrop litar blint på nätverket; token valideras vid varje mikrotjänst. |
+| R-02 | (Tampering) Manipulering av arkivdata eller metadata innan eller under lagring. | 2 | 5 | 10 (Medel) | WORM & Kryptografiskt skydd: Data skrivs till objektlagring konfigurerad med Object Lock (Write Once Read Many). Kryptering sker på applikationsnivå med nycklar från ett dedikerat KMS innan datan sparas ner, vilket förhindrar manipulation i vila. |
+| R-03 | (Repudiation) En användare gör en otillåten sökning och händelsen kan inte spåras/bevisas. | 2 | 4 | 8 (Medel) | Oföränderlig Spårbarhet: Alla läs/skriv-anrop loggas centralt via en separat Audit-tjänst. Loggarna skickas asynkront till en WORM-skyddad lagringsyta (Immutable Audit Log) som inte ens systemadministratörer har raderingsrättigheter till. |
+| R-04 | (Info Disclosure) Databasläcka (ex. SQLi) exponerar känslig metadata och personuppgifter (PII). | 3 | 5 | 15 (Hög) | Segmentering & Kryptering: Implementering av ABAC (Attribute-Based Access Control) säkerställer att sökresultat filtreras per arkivbildare. Databasen är segmenterad i nätverket och krypterad at-rest. Parameteriserade databasanrop via ORM förhindrar injektionsattacker. |
+| R-05 | (DoS) Tjänsteavbrott orsakad av massuppladdning eller komplexa filer (zip-bomber). | 4 | 3 | 12 (Medel) | Rate Limiting & Asynkrona flöden: API Gateway konfigureras med strikt rate-limiting och WAF-regler. Ingest-tjänsten frikopplas med en meddelandekö så att tunga valideringsjobb inte låser den synkrona tråden. |
+| R-06 | (Elevation of Privilege) En handläggare utnyttjar en behörighetsbrist för att komma åt admin-funktioner. | 2 | 5 | 10 (Medel) | Strikt IAM & Continuous Security: Principen om minsta möjliga rättighet (Least Privilege) appliceras överallt, inklusive tjänsternas exekveringsroller. CI/CD-pipelinen inkluderar automatiserad säkerhetstestning (SAST) för att fånga logiska brister tidigt i utvecklingsfasen. |

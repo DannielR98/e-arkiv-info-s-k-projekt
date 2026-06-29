@@ -1,0 +1,13 @@
+name: Security Pipeline
+
+on: [push]
+
+jobs:
+  compliance-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Policy Check
+        run: python3 scripts/check_compliance.py
+      - name: SAST Scan (simulated)
+        run: echo "Running static code analysis..."
